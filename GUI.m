@@ -54,8 +54,11 @@ guidata(hObject, handles);
 
 function handles = showIMG(handles) 
     handles.frame = 1 + handles.frame;
-    data = read(handles.vid, handles.frame);
+    data = normalize(read(handles.vid, handles.frame));
     imshow(data, 'parent', handles.axes1);
+    bm = getPlateBitmask(data);
+    imshow(bm.*255, 'parent', handles.axes2);
+    
     set(handles.text1, 'String', handles.frame);
 
 
