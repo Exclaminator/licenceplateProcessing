@@ -20,9 +20,8 @@ end
 
 % --- Executes just before GUI is made visible.
 function GUI_OpeningFcn(hObject, eventdata, handles, varargin)
-
 handles.output = hObject;
-
+handles.video = 'video.avi';
 guidata(hObject, handles);
 
 
@@ -33,13 +32,41 @@ varargout{1} = handles.output;
 
 % S 
 function pushbutton1_Callback(hObject, eventdata, handles)
+global stop;
 
+if stop == true
+    stop = false;
+else
+    stop = true;
+end
+
+while stop == false
+    handles = showIMG(handles);
+    guidata(hObject, handles);
+end;
 
 
 % N
 function pushbutton2_Callback(hObject, eventdata, handles)
+handles = showIMG(handles);
+guidata(hObject, handles);
 
+
+function handles = showIMG(handles) 
+    handles.frame = 1 + handles.frame;
+    data = read(handles.vid, handles.frame);
+    imshow(data, 'parent', handles.axes1);
+    set(handles.text1, 'String', handles.frame);
 
 
 % L
 function pushbutton3_Callback(hObject, eventdata, handles)
+global stop;
+stop = true;
+[File, Path] = uigetfile('.avi', 'Load a video');
+handles.video = strcat(Path, '/', File);
+handles.vid = VideoReader(handles.video);
+handles.frame = 0;
+
+set(handles.text2, 'String', File);
+guidata(hObject, handles);
