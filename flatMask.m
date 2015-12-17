@@ -1,4 +1,8 @@
-function [ out ] = flatMask( input, mask )
-    out = cat(3, input(:,:,1).*mask, input(:,:,2).*mask, input(:,:,3).*mask);
+function [ maskedRGBImage ] = flatMask( RGB, BW )
+    % Initialize output masked image based on input image.
+    maskedRGBImage = RGB;
+
+    % Set background pixels where BW is false to zero.
+    maskedRGBImage(repmat(~BW,[1 1 3])) = 0;
 end
 

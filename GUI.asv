@@ -56,24 +56,24 @@ handles = showIMG(handles, 1);
 guidata(hObject, handles);
 
 
-function handles = showIMG(handles, forceCalcPlate) 
+function handles = showIMG(handles, force) 
     handles.frame = 1 + handles.frame;
     data = read(handles.vid, handles.frame);
     imshow(data, 'parent', handles.axes1);
     
-    if mod(handles.frame, 10) == 0 | forceCalcPlate
-        ndata = normalize(data);
-        bm = createMask(ndata.*255);
-        
-        if forceCalcPlate  
-            dip_image(bm)
-        end
-        
-        imshow(ndata, 'parent', handles.axes2);
-        imshow(bm.*255, 'parent', handles.axes3);
+    if mod(handles.frame, 10) == 0
+        getPlate(data) 
     end;
     
     set(handles.text1, 'String', handles.frame);
+
+    
+function getPlate(data) 
+    ndata = normalize(data);
+    bm = createMask(ndata.*255);
+
+    imshow(ndata, 'parent', handles.axes2);
+    imshow(bm.*255, 'parent', handles.axes3);
 
 % L button
 function pushbutton3_Callback(hObject, eventdata, handles)
