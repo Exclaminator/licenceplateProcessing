@@ -5,8 +5,8 @@
 function [ mask ] = getPlateBitmask( img )
     %img = ind2rgb(image);
     imgRed = img(:,:,1);
-    imgBlue = img(:,:,2);
-    imgGreen = img(:,:,3);
+    imgGreen = img(:,:,2);
+    imgBlue = img(:,:,3);
     mask = imgRed > 160 & imgRed < 230 & imgBlue > 60 & imgBlue < 130 & imgGreen > 125 & imgGreen < 205;
 end
 
