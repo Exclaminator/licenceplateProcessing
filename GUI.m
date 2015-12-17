@@ -22,6 +22,10 @@ end
 function GUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 handles.video = 'video.avi';
+handles.vid = VideoReader(handles.video);
+set(handles.text2, 'String', handles.video);
+handles.frame = 0;
+
 guidata(hObject, handles);
 
 
