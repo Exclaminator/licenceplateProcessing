@@ -30,7 +30,7 @@ function varargout = GUI_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% S 
+% S button
 function pushbutton1_Callback(hObject, eventdata, handles)
 global stop;
 
@@ -46,7 +46,7 @@ while stop == false
 end;
 
 
-% N
+% N button
 function pushbutton2_Callback(hObject, eventdata, handles)
 handles = showIMG(handles);
 guidata(hObject, handles);
@@ -54,7 +54,7 @@ guidata(hObject, handles);
 
 function handles = showIMG(handles) 
     handles.frame = 1 + handles.frame;
-    data = read(handles.vid, handles.frame);
+    data = normalize(read(handles.vid, handles.frame));
     imshow(data, 'parent', handles.axes1);
     bm = getPlateBitmask(data);
     imshow(bm.*255, 'parent', handles.axes2);
@@ -62,7 +62,7 @@ function handles = showIMG(handles)
     set(handles.text1, 'String', handles.frame);
 
 
-% L
+% L button
 function pushbutton3_Callback(hObject, eventdata, handles)
 global stop;
 stop = true;
