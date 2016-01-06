@@ -63,11 +63,16 @@ function handles = showIMG(handles, forceCalcPlate)
     
     if mod(handles.frame, 10) == 0 | forceCalcPlate
         ndata = normalize(data);
-        bm = createMask(ndata.*255);
+        
+        bClosed = dip_array(label(closing(createMask(ndata.*255),7,'elliptic'),Inf,0,0));
+        objectID = mode(bClosed(bClosed>0));
+        bm = bClosed == objectID;
         
         if forceCalcPlate  
             dip_image(bm)
         end
+        
+        %plateMask = closing(opening(dip_image(bm),3,'elliptic'),4,'parabolic');
         
         imshow(ndata, 'parent', handles.axes2);
         imshow(bm.*255, 'parent', handles.axes3);
