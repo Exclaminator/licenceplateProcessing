@@ -74,23 +74,39 @@ function handles = showIMG(handles, forceCalcPlate)
 
     axes(handles.axes1);
     image(data);
+    
+    % get mask for plate location
+    bm = createMask(normalize(data));
 
-    %if mod(handles.frame, 6) == 0 | forceCalcPlate
-        % get mask for plate location
-        bm = createMask(normalize(data));
+    % find the cornors of the licence plate
+    C = findCorners(bm);
+
+    % update meantime vieuwers
+    hold on
+    plot(C([1:4 1],1),C([1:4 1],2),'r','linewidth',3);
+    hold off
+    
+    if mod(handles.frame, 6) == 0 | forceCalcPlate
+        % deskewer image and bitmask
+        DeSkIm = deskewerImage(data(:,:,1), C);
+        DeSkBM = deskewerImage(bm, C);
+        C2 = findCorners(DeSkBM);
+
+        plate = cutInCornors(DeSkIm, C2);
         
-        % find the cornors of the licence plate
-        C = findCorners(bm);
-
-        % update meantime vieuwers
-        hold on
-        plot(C([1:4 1],1),C([1:4 1],2),'r','linewidth',3);
-        hold off
+        axes(handles.axes3);
+        [plateMask, treshh] = threshold(plate,'isodata',8);
+        plateMask = dip_array(plateMask);
         
-        %IT = deskewerImage(data, C);
-        %set(handles.AX2CD, 'CData', IT);
-
-    %end;
+        %plateMask = plate > 199;
+       	image(cat(3, plateMask, plateMask, plateMask).*255);
+        
+        if forceCalcPlate
+           %dip_image(threshold(plate,'isodata',Inf))
+           treshh
+        end;
+        
+    end;
     
     % update frame counter
     set(handles.text1, 'String', handles.frame);
