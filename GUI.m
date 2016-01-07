@@ -26,6 +26,19 @@ handles.vid = VideoReader(handles.video);
 set(handles.text2, 'String', handles.video);
 handles.frame = 0;
 
+data = read(handles.vid, handles.frame+1);
+imshow(data, 'parent', handles.axes1);
+imshow(data, 'parent', handles.axes2);
+imshow(data, 'parent', handles.axes3);
+imshow(data, 'parent', handles.axes4);
+imshow(data, 'parent', handles.axes5);
+
+handles.AX1CD = get(handles.axes1, 'Children');
+handles.AX2CD = get(handles.axes2, 'Children');
+handles.AX3CD = get(handles.axes3, 'Children');
+handles.AX4CD = get(handles.axes4, 'Children');
+handles.AX5CD = get(handles.axes5, 'Children');
+
 guidata(hObject, handles);
 
 
@@ -55,29 +68,31 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 handles = showIMG(handles, 1);
 guidata(hObject, handles);
 
-
 function handles = showIMG(handles, forceCalcPlate) 
-    handles.frame = 1 + handles.frame;
+    handles.frame = 2 + handles.frame;
     data = read(handles.vid, handles.frame);
-    imshow(data, 'parent', handles.axes1);
+
+    axes(handles.axes1);
+    image(data);
+
+    %if mod(handles.frame, 6) == 0 | forceCalcPlate
+        % get mask for plate location
+        bm = createMask(normalize(data));
+        
+        % find the cornors of the licence plate
+        C = findCorners(bm);
+
+        % update meantime vieuwers
+        hold on
+        plot(C([1:4 1],1),C([1:4 1],2),'r','linewidth',3);
+        hold off
+        
+        %IT = deskewerImage(data, C);
+        %set(handles.AX2CD, 'CData', IT);
+
+    %end;
     
-    if mod(handles.frame, 10) == 0 | forceCalcPlate
-        ndata = normalize(data);
-        
-        bClosed = dip_array(label(closing(createMask(ndata.*255),7,'elliptic'),Inf,0,0));
-        objectID = mode(bClosed(bClosed>0));
-        bm = bClosed == objectID;
-        
-        if forceCalcPlate  
-            dip_image(bm)
-        end
-        
-        %plateMask = closing(opening(dip_image(bm),3,'elliptic'),4,'parabolic');
-        
-        imshow(ndata, 'parent', handles.axes2);
-        imshow(bm.*255, 'parent', handles.axes3);
-    end;
-    
+    % update frame counter
     set(handles.text1, 'String', handles.frame);
 
 % L button
@@ -91,4 +106,3 @@ handles.frame = 0;
 
 set(handles.text2, 'String', File);
 guidata(hObject, handles);
-

@@ -6,7 +6,7 @@ function [ normalized ] = normalize( img )
     normGreen=double(img(:,:,2))./I;
     normBlue=double(img(:,:,3))./I;
     
-    normalized = cat(3, normRed, normGreen,normBlue);
+    normalized = cat(3, normRed, normGreen,normBlue).*255;
    
 end
 

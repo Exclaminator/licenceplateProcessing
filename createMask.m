@@ -1,4 +1,4 @@
-function C3Mask = getMask(RGB)
+function bm = getMask(RGB)
 %createMask  Threshold RGB image using auto-generated code from colorThresholder app.
 %  [BW,MASKEDRGBIMAGE] = createMask(RGB) thresholds image RGB using
 %  auto-generated code from the colorThresholder App. The colorspace and
@@ -29,4 +29,8 @@ channel3Max = 55.000;
 C1Mask = (I(:,:,1) >= channel1Min ) & (I(:,:,1) <= channel1Max);
 C2Mask = C1Mask & (I(:,:,2) >= channel2Min ) & (I(:,:,2) <= channel2Max);
 C3Mask = C2Mask & (I(:,:,3) >= channel3Min ) & (I(:,:,3) <= channel3Max);
+
+bClosed = dip_array(label(closing(C3Mask,17,'elliptic'),Inf,0,0));
+objectID = mode(bClosed(bClosed>0));
+bm = bClosed == objectID;
 

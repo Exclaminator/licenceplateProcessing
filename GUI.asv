@@ -26,6 +26,19 @@ handles.vid = VideoReader(handles.video);
 set(handles.text2, 'String', handles.video);
 handles.frame = 0;
 
+data = read(handles.vid, handles.frame+1);
+imshow(data, 'parent', handles.axes1);
+imshow(data, 'parent', handles.axes2);
+imshow(data, 'parent', handles.axes3);
+imshow(data, 'parent', handles.axes4);
+imshow(data, 'parent', handles.axes5);
+
+handles.AX1CD = get(handles.axes1, 'Children');
+handles.AX2CD = get(handles.axes2, 'Children');
+handles.AX3CD = get(handles.axes3, 'Children');
+handles.AX4CD = get(handles.axes4, 'Children');
+handles.AX5CD = get(handles.axes5, 'Children');
+
 guidata(hObject, handles);
 
 
@@ -55,25 +68,35 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 handles = showIMG(handles, 1);
 guidata(hObject, handles);
 
-
-function handles = showIMG(handles, force) 
-    handles.frame = 1 + handles.frame;
+function handles = showIMG(handles, forceCalcPlate) 
+    handles.frame = 2 + handles.frame;
     data = read(handles.vid, handles.frame);
-    imshow(data, 'parent', handles.axes1);
+    set(handles.AX1CD, 'CData', data);
+
+    axes(handles.axes2);
+
+    if mod(handles.frame, 6) == 0 | forceCalcPlate
+        % get mask for plate location
+        bm = createMask(normalize(data));
+        
+        % find the cornors of the licence plate
+        cornors = findCorners(bm);
     
-    if mod(handles.frame, 10) == 0
-        getPlate(data) 
+        % Show system debug information
+        if forceCalcPlate  
+            
+        end
+        
+        
+        hold on
+        % update meantime vieuwers
+        image(uint8(cat(3, bm, bm, bm)).*data);
+        plot(C([1:4 1],1),C([1:4 1],2),'r','linewidth',3);
+        hold off
     end;
     
+    % update frame counter
     set(handles.text1, 'String', handles.frame);
-
-    
-function getPlate(data) 
-    ndata = normalize(data);
-    bm = createMask(ndata.*255);
-
-    imshow(ndata, 'parent', handles.axes2);
-    imshow(bm.*255, 'parent', handles.axes3);
 
 % L button
 function pushbutton3_Callback(hObject, eventdata, handles)
