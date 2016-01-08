@@ -78,10 +78,10 @@ function handles = showIMG(handles, forceCalcPlate)
     % get mask for plate location
     bm = createMask(normalize(data));
 
-    % find the cornors of the licence plate
+    % find the corners of the licence plate
     C = findCorners(bm);
 
-    % update meantime vieuwers
+    % update meantime viewers
     hold on
     plot(C([1:4 1],1),C([1:4 1],2),'r','linewidth',3);
     hold off
@@ -92,7 +92,7 @@ function handles = showIMG(handles, forceCalcPlate)
         DeSkBM = deskewerImage(bm, C);
         C2 = findCorners(DeSkBM);
 
-        plate = cutInCornors(DeSkIm, C2);
+        plate = cutInCorners(DeSkIm, C2);
         
         axes(handles.axes3);
         [plateMask, treshh] = threshold(plate,'isodata',8);
