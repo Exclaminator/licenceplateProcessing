@@ -76,7 +76,8 @@ function handles = showIMG(handles, forceCalcPlate)
     image(data);
     
     % get mask for plate location
-    bm = createMask(normalize(data));
+    ndata = normalize(data);
+    bm = createMask(ndata);
 
     % find the cornors of the licence plate
     C = findCorners(bm);
@@ -118,7 +119,7 @@ stop = true;
 [File, Path] = uigetfile('.avi', 'Load a video');
 handles.video = strcat(Path, '/', File);
 handles.vid = VideoReader(handles.video);
-handles.frame = 0;
+handles.frame = 1;
 
 set(handles.text2, 'String', File);
 guidata(hObject, handles);

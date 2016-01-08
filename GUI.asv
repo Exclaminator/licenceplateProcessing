@@ -71,28 +71,39 @@ guidata(hObject, handles);
 function handles = showIMG(handles, forceCalcPlate) 
     handles.frame = 2 + handles.frame;
     data = read(handles.vid, handles.frame);
-    set(handles.AX1CD, 'CData', data);
 
-    axes(handles.axes2);
-
-    if mod(handles.frame, 6) == 0 | forceCalcPlate
-        % get mask for plate location
-        bm = createMask(normalize(data));
-        
-        % find the cornors of the licence plate
-        cornors = findCorners(bm);
+    axes(handles.axes1);
+    image(data);
     
-        % Show system debug information
-        if forceCalcPlate  
-            
-        end
+    % get mask for plate location
+    ndata = normalize(data);
+    bm = createMask(ndata);
+
+    % find the cornors of the licence plate
+    C = findCorners(bm);
+
+    % update meantime vieuwers
+    hold on
+    plot(C([1:4 1],1),C([1:4 1],2),'r','linewidth',3);
+    hold off
+    
+    if mod(handles.frame, 12) == 1 | forceCalcPlate
+        % deskewer image and bitmask
+        DeSkIm = deskewerImage(data(:,:,2), C);
+        plate = cutInCornors(DeSkIm, findCorners(deskewerImage(bm, C)));
+        [plateMask, Tresh] = threshold(plate,'background',1000); 
+        %plateMask = dip_array(bopening(plateTh > Tresh(end), 1, -1, 0));
+        %plateMask = plate > 199;
         
+        axes(handles.axes3);
+       	%image(cat(3, plateMask, plateMask, plateMask).*255);
         
-        hold on
-        % update meantime vieuwers
-        image(uint8(cat(3, bm, bm, bm)).*data);
-        plot(C([1:4 1],1),C([1:4 1],2),'r','linewidth',3);
-        hold off
+       	image(dip_array(plateMask));
+        
+        if forceCalcPlate
+           dip_image(plateMask)
+        end;
+        
     end;
     
     % update frame counter
@@ -105,7 +116,7 @@ stop = true;
 [File, Path] = uigetfile('.avi', 'Load a video');
 handles.video = strcat(Path, '/', File);
 handles.vid = VideoReader(handles.video);
-handles.frame = 0;
+handles.frame = 1;
 
 set(handles.text2, 'String', File);
 guidata(hObject, handles);
