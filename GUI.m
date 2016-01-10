@@ -95,6 +95,13 @@ function handles = showIMG(handles, forceCalcPlate)
 
         plate = cutInCorners(DeSkIm, C2);
         
+        % Make a binary image from the plate, 1= foreground (signs), 0=
+        % background
+        BinIm=im2bw(plate,0.5);
+        IM2=imcomplement(BinIm);
+        dip_image(IM2)
+        
+        
         axes(handles.axes3);
         [plateMask, treshh] = threshold(plate,'isodata',8);
         plateMask = dip_array(plateMask);
