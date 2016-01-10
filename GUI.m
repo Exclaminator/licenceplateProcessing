@@ -98,9 +98,11 @@ function handles = showIMG(handles, forceCalcPlate)
         % Make a binary image from the plate, 1= foreground (signs), 0=
         % background
         BinIm=im2bw(plate,0.5);
-        IM2=imcomplement(BinIm);
-        dip_image(IM2)
+        IM2=imcomplement(BinIm); %complement is nodig anders krijg je dat de achtergrond waarde 1 heeft.
+        dip_image(IM2) %-> linear stretch op uitvoeren om wat te zien
         
+        %De verschillenden objecten nummeren. 
+        label=bwlabel(IM2); 
         
         axes(handles.axes3);
         [plateMask, treshh] = threshold(plate,'isodata',8);
