@@ -11,7 +11,9 @@ cornersNew=findCorners(deskewBm);
 plate=cutInCorners(deskewIm, cornersNew);
 
 binIm= im2bw(plate, 0.5);
-IM2= imcomplement(binIm);
+IM1= imcomplement(binIm);
+%De platen dezelfde size geven, dus nu zouden de pixels per letter (ongeveer) even groot moeten zijn.
+IM2=imresize(IM1,[200 NaN]);
 dip_image(IM2) 
 
 connectivity=bwconncomp(IM2);
@@ -26,3 +28,6 @@ end
 
 label=bwlabel(IM2); %bwlabeln(IM2) kan ook hier. 
 dip_image(label) %linear stretch toepassen
+
+%Finding the edges of the lettres
+edges=edge(IM2, 'sobel');  
