@@ -101,7 +101,10 @@ function handles = showIMG(handles, forceCalcPlate)
         % background
         BinIm=im2bw(plate,0.5);
         IM2=imcomplement(BinIm); %complement is nodig anders krijg je dat de achtergrond waarde 1 heeft.
-        dip_image(IM2) %-> linear stretch op uitvoeren om wat te zien
+        
+        if forceCalcPlate
+            dip_image(IM2) %-> linear stretch op uitvoeren om wat te zien
+        end
         
         %De verschillenden objecten nummeren. 
         label=bwlabel(IM2); 
