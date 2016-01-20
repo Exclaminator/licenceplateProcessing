@@ -1,9 +1,10 @@
-function [ Objects ] = plateToCharters( plate )
+function [ Objects , Heights] = plateToCharters( plate )
         HObj = max(max(plate));
-        Objects = zeros(200, 100, HObj+1, 'uint8');
         
+        Objects = zeros(200, 100, HObj, 'uint8');
+        Heights = zeros(HObj+1, 1);
         for i = 1:HObj
-            Objects(:,:, i) = minimizeImage(plate == i);
+            [Objects(:,:, i), Heights(i)] = minimizeImage(plate == i);
         end;
 end
 

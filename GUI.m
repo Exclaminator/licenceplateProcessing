@@ -34,16 +34,15 @@ handles.frame = 0;
 
 data = read(handles.vid, handles.frame+1);
 imshow(data, 'parent', handles.axes1);
-imshow(data, 'parent', handles.axes2);
 imshow(data, 'parent', handles.axes3);
 imshow(data, 'parent', handles.axes4);
 imshow(data, 'parent', handles.axes5);
 
 handles.AX1CD = get(handles.axes1, 'Children');
-handles.AX2CD = get(handles.axes2, 'Children');
 handles.AX3CD = get(handles.axes3, 'Children');
 handles.AX4CD = get(handles.axes4, 'Children');
 handles.AX5CD = get(handles.axes5, 'Children');
+set(handles.uitable3,'Data',{})
 
 guidata(hObject, handles);
 
@@ -59,6 +58,7 @@ global stop;
 
 if stop == true
     stop = false;
+    handles.startStamp = tic();
 else
     stop = true;
 end
@@ -75,7 +75,7 @@ handles = showIMG(handles, 1);
 guidata(hObject, handles);
 
 function handles = showIMG(handles, forceCalcPlate) 
-    handles.frame = 2 + handles.frame;
+    handles.frame = 1 + handles.frame;
     data = read(handles.vid, handles.frame);
 
     axes(handles.axes1);
@@ -97,35 +97,40 @@ function handles = showIMG(handles, forceCalcPlate)
         IM2 = bwlabel(removeEdgeObjects(IM2));
         IM3 = bwlabel(removeEdgeObjects(IM3));
         
-        Charters = plateToCharters(IM3);
-        match = zeros(size(Charters, 3), size(handles.characterMasks, 3));
-        bestFit = zeros(size(Charters, 3), 2);
-        
-        for i = 1:size(Charters, 3)
-            if mean2(Charters(:,:,i)) > 0.5
-                chars(i) = '-';
-            else
-                for j = 1:size(handles.characterMasks, 3)
-                    match(i, j) = 2*sum(sum(Charters(:,:,i).*handles.characterMasks(:,:,j)))/(sum(sum(Charters(:,:,i))) + sum(sum(handles.characterMasks(:,:,j))));
-                end;
-                bestFit(i, 1) = max(match(i, :));
-                bestFit(i, 2) = find(match(i, :) ==  bestFit(i, 1), 1);
-                chars(i) = handles.lookupTable(bestFit(i, 2));
-            end;
+        if max(max(IM2)) == 8 
+            
+            [Charters, Heights] = plateToCharters(IM2);
+            [dashes, match] = bestFitMatching( Charters, Heights, handles.characterMasks, handles.lookupTable);
         end;
         
+        if max(max(IM3)) == 8 
+
+            [Charters, Heights] = plateToCharters(IM3);
+            [dashes2, match2] = bestFitMatching( Charters, Heights, handles.characterMasks, handles.lookupTable);
+        end;
+        
+        
+        str = get(handles.uitable3,'Data');
+        
+        if max(max(IM2)) == 8 && size(chars, 2) == 8
+            cell = {chars, handles.frame, toc(handles.startStamp)};
+            str = [cell; str];
+        end
+        if max(max(IM3)) == 8 && size(chars2, 2) == 8
+            cell = {chars2, handles.frame, toc(handles.startStamp)};
+            str = [cell; str];
+        end
+        
+        set(handles.uitable3,'Data', str);
+
         %bestFit
         
-        set(handles.text3, 'String', chars);
         axes(handles.axes3);
        	image(IM2.*10);
         
         axes(handles.axes4);
        	image(IM3.*10);
         
-        
-        %axes(handles.axes5);
-       	%image(IM4.*30);
         
     end;
     
@@ -171,3 +176,26 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+
+
+% --- Executes on selection change in listbox2.
+function listbox2_Callback(hObject, eventdata, handles)
+% hObject    handle to listbox2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns listbox2 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from listbox2
+
+
+% --- Executes during object creation, after setting all properties.
+function listbox2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to listbox2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
