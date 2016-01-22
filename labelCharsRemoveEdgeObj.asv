@@ -1,4 +1,0 @@
-function [ labeld ] = labelCharsRemoveEdgeObj( Image )
-    labeld = label(dip_image(imclearborder(Image), 2, 15));
-end
-

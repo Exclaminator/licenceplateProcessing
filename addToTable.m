@@ -6,11 +6,9 @@ function [ handles ] = addToTable( handles, chars, frame)
         str = [cell; str];
     elseif sum(str{1, 1} == chars) == 8
         
-    elseif sum(str{1, 1} == chars) >= 6
-        if sum(str{1, 5} == chars) == 8
+    elseif sum(str{1, 1} == chars) >= 4
+        if sum(str{1, 4} == chars) == 8
             str{1,1} = chars;
-        elseif sum(str{1, 4} == chars) == 8
-            str{1,5} = chars;
         else
             str{1,4} = chars;
         end;

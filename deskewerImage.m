@@ -5,8 +5,8 @@ function [ IT ] = deskewerImage( Image, C )
     D = mean(C([3 4],2));
     C2 = [L U; R U; R D; L D];
     try 
-        T = fitgeotrans(C ,C2,'projective');
-        IT = imwarp(Image,T);
+        T = cp2tform(C ,C2,'projective');
+        IT = imtransform(Image,T);
     catch
         IT = Image;
     end

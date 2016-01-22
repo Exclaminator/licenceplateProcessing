@@ -33,15 +33,6 @@ set(handles.text2, 'String', handles.video);
 handles.frame = 0;
 
 data = read(handles.vid, handles.frame+1);
-imshow(data, 'parent', handles.axes1);
-imshow(data, 'parent', handles.axes3);
-imshow(data, 'parent', handles.axes4);
-imshow(data, 'parent', handles.axes5);
-
-handles.AX1CD = get(handles.axes1, 'Children');
-handles.AX3CD = get(handles.axes3, 'Children');
-handles.AX4CD = get(handles.axes4, 'Children');
-handles.AX5CD = get(handles.axes5, 'Children');
 
 handles.matchingData = zeros(8, size(handles.characterMasks, 3), 10);
 handles.matchingFrames = zeros(10, 1);
@@ -60,6 +51,7 @@ varargout{1} = handles.output;
 function pushbutton1_Callback(hObject, eventdata, handles)
 global stop;
 
+set(handles.text5, 'String', handles.vid.duration);
 if stop == true
     stop = false;
     handles.startStamp = tic();
@@ -81,14 +73,14 @@ guidata(hObject, handles);
 
 function handles = showIMG(handles, forceCalcPlate) 
 global stop;
-    handles.frame = 1 + handles.frame;
-    %try
+    handles.frame = 4 + handles.frame;
+    try
         data = read(handles.vid, handles.frame);
 
         axes(handles.axes1);
         image(data);
 
-        if mod(handles.frame, 6) == 0 || forceCalcPlate
+        if mod(handles.frame, 8) == 0 || forceCalcPlate
             % get the straigtend out cut plate
             plate = removeShadowsAndSharpen(imageToPlate(data));
             try
@@ -98,19 +90,17 @@ global stop;
             end;
             
             handles = addPlateToTableProcess(IM1, handles);
-
-            axes(handles.axes4);
-            image(IM1.*10);
         end;
 
         % update frame counter
         set(handles.text1, 'String', handles.frame);
-    %catch
+        set(handles.text4, 'String', toc(handles.startStamp));
+    catch
         
-        %set(handles.text1, 'String', 'Done');
-        %handles.frame = 0;
-        %stop = true;
-    %end;
+        set(handles.text1, 'String', 'Done');
+        handles.frame = 0;
+        stop = true;
+    end;
     
 % L button
 function pushbutton3_Callback(hObject, eventdata, handles)
@@ -126,6 +116,7 @@ guidata(hObject, handles);
 
 % --- Executes on button press in pushbutton4.
 function pushbutton4_Callback(hObject, eventdata, handles)
+    handles.startStamp = tic();
     handles.frame = str2double(get(handles.edit1,'String')) - 2;
     guidata(hObject, handles);
     showIMG(handles, true);
