@@ -1,5 +1,7 @@
-function [ chars ] = getLetterNumericPatterFromProb( chars, match )
+function [ chars ] = getLetterNumericPatterFromProb( match, dashes, lookupTable )
     prev = 1;
+    
+    
     prob = zeros(size(dashes, 2), 2);
     
     for i=1:size(dashes, 2)
@@ -22,7 +24,7 @@ function [ chars ] = getLetterNumericPatterFromProb( chars, match )
         elseif sum(numericSections) == 3
             numericSections(prob(:,2) == min(prob(:,2))) = 0;
         end;
-        
+        chars = '__-__-__';
     % __-___-_ 231
     elseif isequal(dashes, [3, 7, 9])
          % 101 or 010
@@ -32,6 +34,7 @@ function [ chars ] = getLetterNumericPatterFromProb( chars, match )
              numericSections = [1, 0, 1];
          end;
         
+        chars = '__-___-_';
     % _-___-__ 132
     elseif isequal(dashes, [2, 6, 9])
         % 101 or 010
@@ -40,12 +43,13 @@ function [ chars ] = getLetterNumericPatterFromProb( chars, match )
          else
              numericSections = [1, 0, 1];
          end;
+        chars = '_-___-__';
          
     % ___-__-_ 321
     elseif isequal(dashes, [4, 7, 9])
         % 101
         numericSections = [1, 0, 1];
-        
+        chars = '___-__-_';
     else 
         chars = '--';
         return;

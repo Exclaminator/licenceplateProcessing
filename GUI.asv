@@ -30,7 +30,7 @@ handles.output = hObject;
 handles.video = 'video.avi';
 handles.vid = VideoReader(handles.video);
 set(handles.text2, 'String', handles.video);
-handles.frame = 0;
+handles.frame = 40;
 
 data = read(handles.vid, handles.frame+1);
 imshow(data, 'parent', handles.axes1);
@@ -75,7 +75,6 @@ end;
 
 % N button
 function pushbutton2_Callback(hObject, eventdata, handles)
-handles.startStamp = tic();
 handles = showIMG(handles, 1);
 guidata(hObject, handles);
 
@@ -88,19 +87,38 @@ global stop;
         axes(handles.axes1);
         image(data);
 
+
+        % update meantime viewers
+        %hold on
+        %plot(C([1:4 1],1),C([1:4 1],2),'r','linewidth',3);
+        %hold off
+
         if mod(handles.frame, 6) == 0 || forceCalcPlate
             % get the straigtend out cut plate
-            plate = removeShadowsAndSharpen(imageToPlate(data));
-            try
-                IM1 = labelCharsRemoveEdgeObj(~threshold(plate,'isodata',Inf));
-            catch
-                return;
-            end;
+            plate = imageToPlate(data);
+            plate = dip_image(plate(:,:,1));
+            shadows = maxf(plate, 11, 'elliptic');
+            plate = plate - shadows + 255;
+            plate = plate - 4 * laplace(plate);
             
+            IM1 = labelCharsRemoveEdgeObj(~threshold(plate,'isodata',Inf));
+            %IM2 = labelCharsRemoveEdgeObj(getCharterBitmask(plate));
+            %IM3 = labelCharsRemoveEdgeObj(getCharterBitmaskHSB(plate));
+
             handles = addPlateToTableProcess(IM1, handles);
+            %handles = addPlateToTableProcess(IM2, handles);
+            %handles = addPlateToTableProcess(IM3, handles);
+
+            axes(handles.axes3);
+            image(dip_array(IM1).*10);
 
             axes(handles.axes4);
-            image(IM1.*10);
+            image(dip_array(IM2).*10);
+
+            axes(handles.axes5);
+            image(dip_array(IM3).*10);
+
+
         end;
 
         % update frame counter
