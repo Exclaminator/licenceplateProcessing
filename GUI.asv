@@ -30,18 +30,9 @@ handles.output = hObject;
 handles.video = 'video.avi';
 handles.vid = VideoReader(handles.video);
 set(handles.text2, 'String', handles.video);
-handles.frame = 40;
+handles.frame = 0;
 
 data = read(handles.vid, handles.frame+1);
-imshow(data, 'parent', handles.axes1);
-imshow(data, 'parent', handles.axes3);
-imshow(data, 'parent', handles.axes4);
-imshow(data, 'parent', handles.axes5);
-
-handles.AX1CD = get(handles.axes1, 'Children');
-handles.AX3CD = get(handles.axes3, 'Children');
-handles.AX4CD = get(handles.axes4, 'Children');
-handles.AX5CD = get(handles.axes5, 'Children');
 
 handles.matchingData = zeros(8, size(handles.characterMasks, 3), 10);
 handles.matchingFrames = zeros(10, 1);
@@ -60,6 +51,7 @@ varargout{1} = handles.output;
 function pushbutton1_Callback(hObject, eventdata, handles)
 global stop;
 
+set(handles.text5, 'String', handles.vid.duration);
 if stop == true
     stop = false;
     handles.startStamp = tic();
@@ -75,60 +67,54 @@ end;
 
 % N button
 function pushbutton2_Callback(hObject, eventdata, handles)
+handles.startStamp = tic();
 handles = showIMG(handles, 1);
 guidata(hObject, handles);
 
 function handles = showIMG(handles, forceCalcPlate) 
 global stop;
-    handles.frame = 1 + handles.frame;
-    %try
+    handles.frame = 4 + handles.frame;
         data = read(handles.vid, handles.frame);
 
         axes(handles.axes1);
         image(data);
 
-
-        % update meantime viewers
-        %hold on
-        %plot(C([1:4 1],1),C([1:4 1],2),'r','linewidth',3);
-        %hold off
-
-        if mod(handles.frame, 6) == 0 || forceCalcPlate
+        if mod(handles.frame, 8) == 0 || forceCalcPlate
             % get the straigtend out cut plate
-            plate = imageToPlate(data);
-            plate = dip_image(plate(:,:,1));
-            shadows = maxf(plate, 11, 'elliptic');
-            plate = plate - shadows + 255;
-            plate = plate - 4 * laplace(plate);
+            plate = removeShadowsAndSharpen(imageToPlate(data));
+            try
+                IM1 = labelCharsRemoveEdgeObj(~threshold(plate,'isodata',Inf));
+            catch
+                return;
+            end;
             
-            IM1 = labelCharsRemoveEdgeObj(~threshold(plate,'isodata',Inf));
-            %IM2 = labelCharsRemoveEdgeObj(getCharterBitmask(plate));
-            %IM3 = labelCharsRemoveEdgeObj(getCharterBitmaskHSB(plate));
-
+            axes(handles.axes6);
+            IM2 = IM1;
+            Objs = find(conv((sum(IM2, 2)), [1; 1]) > 0);
+            if size(Objs, 1) > 0
+                LowestObj = Objs(size(Objs, 1));
+                HighstObj = Objs(1);
+                IM2(ceil((HighstObj + LowestObj)/2)-1, :) = ones(1, size(IM2, 2));
+                
+                row = IM2(ceil((HighstObj + LowestObj)/2)-1, :);
+                objs = find(row(row > 0));
+                
+                if size(objs, 1) == 8
+                    for i = 1:8
+                        
+                    
+                    end;
+                end;
+            end;
+            
+            
+            image(IM2.*10);
             handles = addPlateToTableProcess(IM1, handles);
-            %handles = addPlateToTableProcess(IM2, handles);
-            %handles = addPlateToTableProcess(IM3, handles);
-
-            axes(handles.axes3);
-            image(dip_array(IM1).*10);
-
-            axes(handles.axes4);
-            image(dip_array(IM2).*10);
-
-            axes(handles.axes5);
-            image(dip_array(IM3).*10);
-
-
         end;
 
         % update frame counter
         set(handles.text1, 'String', handles.frame);
-    %catch
-        
-        %set(handles.text1, 'String', 'Done');
-        %handles.frame = 0;
-        %stop = true;
-    %end;
+        set(handles.text4, 'String', toc(handles.startStamp));
     
 % L button
 function pushbutton3_Callback(hObject, eventdata, handles)
@@ -144,6 +130,7 @@ guidata(hObject, handles);
 
 % --- Executes on button press in pushbutton4.
 function pushbutton4_Callback(hObject, eventdata, handles)
+    handles.startStamp = tic();
     handles.frame = str2double(get(handles.edit1,'String')) - 2;
     guidata(hObject, handles);
     showIMG(handles, true);

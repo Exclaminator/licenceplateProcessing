@@ -74,7 +74,6 @@ guidata(hObject, handles);
 function handles = showIMG(handles, forceCalcPlate) 
 global stop;
     handles.frame = 4 + handles.frame;
-    try
         data = read(handles.vid, handles.frame);
 
         axes(handles.axes1);
@@ -84,23 +83,45 @@ global stop;
             % get the straigtend out cut plate
             plate = removeShadowsAndSharpen(imageToPlate(data));
             try
-                IM1 = labelCharsRemoveEdgeObj(~threshold(plate,'isodata',Inf));
+                IM1 = labelCharsRemoveEdgeObj(closing(~threshold(plate,'isodata',Inf), 1));
             catch
                 return;
             end;
             
+            axes(handles.axes6);
+            IM2 = IM1;
+            Objs = find(conv((sum(IM2, 2)), [1; 1]) > 0);
+            if max(max(IM2)) > 8 && size(Objs, 1) > 0
+                LowestObj = Objs(size(Objs, 1));
+                HighstObj = Objs(1);
+                IM2(ceil((HighstObj + LowestObj)/2)-1, :) = ones(1, size(IM2, 2));
+                
+                row = IM1(ceil((HighstObj + LowestObj)/2)-1, :);
+                objs = unique(row(row > 0));
+                row
+                objs
+                
+                IM3 = zeros(size(IM2));
+                
+                if size(objs, 2) == 8
+                    for i = 1:8
+                        IM3 = IM3 + (IM1 == objs(i))*i;
+                    end;
+                else
+                    size(objs)
+                end;
+                IM1 = IM3;
+                IM2 = IM3;
+            end;
+            
+            
+            image(IM2.*10);
             handles = addPlateToTableProcess(IM1, handles);
         end;
 
         % update frame counter
         set(handles.text1, 'String', handles.frame);
         set(handles.text4, 'String', toc(handles.startStamp));
-    catch
-        
-        set(handles.text1, 'String', 'Done');
-        handles.frame = 0;
-        stop = true;
-    end;
     
 % L button
 function pushbutton3_Callback(hObject, eventdata, handles)
