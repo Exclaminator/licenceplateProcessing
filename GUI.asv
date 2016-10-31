@@ -1,3 +1,5 @@
+%run('C:\Program Files\DIPimage 2.7\dipstart.m')
+
 function varargout = GUI(varargin)
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
@@ -20,6 +22,10 @@ end
 
 % --- Executes just before GUI is made visible.
 function GUI_OpeningFcn(hObject, eventdata, handles, varargin)
+CharterArrayStruct = load('-mat', 'CharterArray');
+handles.characterMasks = uint8(CharterArrayStruct.b);
+handles.lookupTable = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'B', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'R', 'S', 'T', 'V', 'X', 'Z', '-'];
+
 handles.output = hObject;
 handles.video = 'video.avi';
 handles.vid = VideoReader(handles.video);
@@ -27,17 +33,11 @@ set(handles.text2, 'String', handles.video);
 handles.frame = 0;
 
 data = read(handles.vid, handles.frame+1);
-imshow(data, 'parent', handles.axes1);
-imshow(data, 'parent', handles.axes2);
-imshow(data, 'parent', handles.axes3);
-imshow(data, 'parent', handles.axes4);
-imshow(data, 'parent', handles.axes5);
 
-handles.AX1CD = get(handles.axes1, 'Children');
-handles.AX2CD = get(handles.axes2, 'Children');
-handles.AX3CD = get(handles.axes3, 'Children');
-handles.AX4CD = get(handles.axes4, 'Children');
-handles.AX5CD = get(handles.axes5, 'Children');
+handles.matchingData = zeros(8, size(handles.characterMasks, 3), 10);
+handles.matchingFrames = zeros(10, 1);
+
+set(handles.uitable3,'Data',{})
 
 guidata(hObject, handles);
 
@@ -51,8 +51,10 @@ varargout{1} = handles.output;
 function pushbutton1_Callback(hObject, eventdata, handles)
 global stop;
 
+set(handles.text5, 'String', handles.vid.duration);
 if stop == true
     stop = false;
+    handles.startStamp = tic();
 else
     stop = true;
 end
@@ -65,50 +67,55 @@ end;
 
 % N button
 function pushbutton2_Callback(hObject, eventdata, handles)
+handles.startStamp = tic();
 handles = showIMG(handles, 1);
 guidata(hObject, handles);
 
 function handles = showIMG(handles, forceCalcPlate) 
-    handles.frame = 2 + handles.frame;
-    data = read(handles.vid, handles.frame);
+global stop;
+    handles.frame = 4 + handles.frame;
+        data = read(handles.vid, handles.frame);
 
-    axes(handles.axes1);
-    image(data);
-    
-    % get mask for plate location
-    ndata = normalize(data);
-    bm = createMask(ndata);
+        axes(handles.axes1);
+        image(data);
 
-    % find the cornors of the licence plate
-    C = findCorners(bm);
-
-    % update meantime vieuwers
-    hold on
-    plot(C([1:4 1],1),C([1:4 1],2),'r','linewidth',3);
-    hold off
-    
-    if mod(handles.frame, 12) == 1 | forceCalcPlate
-        % deskewer image and bitmask
-        DeSkIm = deskewerImage(data(:,:,2), C);
-        plate = cutInCornors(DeSkIm, findCorners(deskewerImage(bm, C)));
-        [plateMask, Tresh] = threshold(plate,'background',1000); 
-        %plateMask = dip_array(bopening(plateTh > Tresh(end), 1, -1, 0));
-        %plateMask = plate > 199;
-        
-        axes(handles.axes3);
-       	%image(cat(3, plateMask, plateMask, plateMask).*255);
-        
-       	image(dip_array(plateMask));
-        
-        if forceCalcPlate
-           dip_image(plateMask)
+        if mod(handles.frame, 8) == 0 || forceCalcPlate
+            % get the straigtend out cut plate
+            plate = removeShadowsAndSharpen(imageToPlate(data));
+            try
+                IM1 = labelCharsRemoveEdgeObj(~threshold(plate,'isodata',Inf));
+            catch
+                return;
+            end;
+            
+            axes(handles.axes6);
+            IM2 = IM1;
+            Objs = find(conv((sum(IM2, 2)), [1; 1]) > 0);
+            if size(Objs, 1) > 0
+                LowestObj = Objs(size(Objs, 1));
+                HighstObj = Objs(1);
+                IM2(ceil((HighstObj + LowestObj)/2)-1, :) = ones(1, size(IM2, 2));
+                
+                row = IM2(ceil((HighstObj + LowestObj)/2)-1, :);
+                objs = find(row(row > 0));
+                
+                if size(objs, 1) == 8
+                    for i = 1:8
+                        
+                    
+                    end;
+                end;
+            end;
+            
+            
+            image(IM2.*10);
+            handles = addPlateToTableProcess(IM1, handles);
         end;
-        
-    end;
-    
-    % update frame counter
-    set(handles.text1, 'String', handles.frame);
 
+        % update frame counter
+        set(handles.text1, 'String', handles.frame);
+        set(handles.text4, 'String', toc(handles.startStamp));
+    
 % L button
 function pushbutton3_Callback(hObject, eventdata, handles)
 global stop;
@@ -116,7 +123,59 @@ stop = true;
 [File, Path] = uigetfile('.avi', 'Load a video');
 handles.video = strcat(Path, '/', File);
 handles.vid = VideoReader(handles.video);
-handles.frame = 1;
+handles.frame = 0;
 
 set(handles.text2, 'String', File);
 guidata(hObject, handles);
+
+% --- Executes on button press in pushbutton4.
+function pushbutton4_Callback(hObject, eventdata, handles)
+    handles.startStamp = tic();
+    handles.frame = str2double(get(handles.edit1,'String')) - 2;
+    guidata(hObject, handles);
+    showIMG(handles, true);
+
+function edit1_Callback(hObject, eventdata, handles)
+% hObject    handle to edit1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit1 as text
+%        str2double(get(hObject,'String')) returns contents of edit1 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+% --- Executes on selection change in listbox2.
+function listbox2_Callback(hObject, eventdata, handles)
+% hObject    handle to listbox2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns listbox2 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from listbox2
+
+
+% --- Executes during object creation, after setting all properties.
+function listbox2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to listbox2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
